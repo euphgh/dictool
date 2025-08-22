@@ -1,32 +1,21 @@
-# see /opt/local/share/cmake-3.16/Modules/FindGTest.cmake
+# if local have gtest, use local gtest
 find_package(GTest QUIET)
 
-# NOTE: the upper case GTEST! CK
-if(NOT GTEST_FOUND)
-  # Download and unpack googletest at configure time
-  # but only if needed! CK
-  configure_file(${CMAKE_SOURCE_DIR}/cmake/GoogleTest-CMakeLists.txt.in
-    ${CMAKE_BINARY_DIR}/googletest-download/CMakeLists.txt)
-  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download)
-  if(result)
-    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-  endif()
+# else fetch from github
+if (NOT TARGET GTest::gtest_main)
+    message(STATUS "GTest not found locally, fetching from GitHub...")
 
-  execute_process(COMMAND ${CMAKE_COMMAND} --build .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/googletest-download)
-  if(result)
-    message(FATAL_ERROR "Build step for googletest failed: ${result}")
-  endif()
+    FetchContent_Declare(
+        googletest
+        # Pin to a known-good release
+        URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    )
+    # On MSVC use /MD
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-  # Add googletest directly to our build. This defines
-  # the gtest and gtest_main targets.
-  add_subdirectory(${CMAKE_BINARY_DIR}/googletest-src
-    ${CMAKE_BINARY_DIR}/googletest-build
-    EXCLUDE_FROM_ALL)
+    FetchContent_MakeAvailable(googletest)
 endif()
+
 
 add_executable(multidict_test
   src/multidict/constructor.cc
@@ -44,3 +33,5 @@ target_link_libraries(multidict_test
         GTest::gtest_main
         GTest::gmock
 )
+
+gtest_discover_tests(multidict_test)

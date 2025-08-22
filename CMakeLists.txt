@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(dictool VERSION 0.1.0 LANGUAGES CXX)
-
 option(dictool_BUILD_TESTS "Build tests" ON)
+
+include(FetchContent)
 
 add_library(dictool INTERFACE)
 target_compile_features(dictool INTERFACE cxx_std_17)
