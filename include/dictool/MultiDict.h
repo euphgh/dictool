@@ -53,8 +53,7 @@ struct HasEmplaceValue : std::false_type {};
  * @tparam T The container type that has emplace.
  */
 template <typename T>
-struct HasEmplaceValue<T, std::void_t<decltype(std::declval<T>().emplace(
-                              std::declval<typename T::value_type>()))>>
+struct HasEmplaceValue<T, std::void_t<decltype(std::declval<T>().emplace())>>
     : std::true_type {};
 
 /**
