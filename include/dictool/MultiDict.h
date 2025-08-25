@@ -117,7 +117,7 @@ public:
    *
    * Provides read-only access to key-value pairs.
    */
-  class iterator {
+  class Iterator {
   private:
     using outer_iterator =
         typename Dict::const_iterator; /**< Iterator for the outer dictionary */
@@ -151,7 +151,7 @@ public:
      * @param oend End of outer dictionary.
      * @param iit Inner iterator position.
      */
-    iterator(outer_iterator oit, outer_iterator oend, inner_iterator iit)
+    Iterator(outer_iterator oit, outer_iterator oend, inner_iterator iit)
         : outer_it(oit), outer_end(oend), inner_it(iit) {
       advance_to_next_valid();
     }
@@ -191,7 +191,7 @@ public:
      *
      * @return iterator& Reference to the incremented iterator.
      */
-    iterator &operator++() {
+    Iterator &operator++() {
       if (outer_it != outer_end) {
         ++inner_it;
         advance_to_next_valid();
@@ -204,8 +204,8 @@ public:
      *
      * @return iterator Copy of the iterator before incrementing.
      */
-    iterator operator++(int) {
-      iterator tmp = *this;
+    Iterator operator++(int) {
+      Iterator tmp = *this;
       ++(*this);
       return tmp;
     }
@@ -216,7 +216,7 @@ public:
      * @param other Other iterator to compare with.
      * @return true if iterators are equal, false otherwise.
      */
-    bool operator==(const iterator &other) const {
+    bool operator==(const Iterator &other) const {
       return outer_it == other.outer_it &&
              (outer_it == outer_end || inner_it == other.inner_it);
     }
@@ -227,7 +227,7 @@ public:
      * @param other Other iterator to compare with.
      * @return true if iterators are not equal, false otherwise.
      */
-    bool operator!=(const iterator &other) const { return !(*this == other); }
+    bool operator!=(const Iterator &other) const { return !(*this == other); }
   };
 
   // ========== std::multimap compatible API ==========
@@ -262,14 +262,14 @@ public:
    *
    * @return true if empty, false otherwise.
    */
-  bool empty() const { return data.empty(); }
+  [[nodiscard]] bool empty() const { return data.empty(); }
 
   /**
    * @brief Get the total number of values in the multimap.
    *
    * @return size_type Total number of values.
    */
-  size_type size() const {
+  [[nodiscard]] size_type size() const {
     size_type count = 0;
     for (const auto &pair : data) {
       count += pair.second.size();
@@ -282,7 +282,7 @@ public:
    *
    * @return size_type Maximum size.
    */
-  size_type max_size() const { return data.max_size(); }
+  [[nodiscard]] size_type max_size() const { return data.max_size(); }
 
   // Modifiers
 
@@ -299,7 +299,7 @@ public:
    * @param value Key-value pair to insert.
    * @return iterator Iterator to the inserted element.
    */
-  iterator insert(const value_type &value) {
+  Iterator insert(const value_type &value) {
     return emplace(value.first, value.second);
   }
 
@@ -309,7 +309,7 @@ public:
    * @param value Key-value pair to move.
    * @return iterator Iterator to the inserted element.
    */
-  iterator insert(value_type &&value) {
+  Iterator insert(value_type &&value) {
     return emplace(std::move(const_cast<K &>(value.first)),
                    std::move(value.second));
   }
@@ -368,17 +368,17 @@ public:
    * @param args Arguments to forward to value constructor.
    * @return iterator Iterator to the emplaced element.
    */
-  template <typename... Args> iterator emplace(Args &&...args) {
+  template <typename... Args> Iterator emplace(Args &&...args) {
     // Construct pair to decompose arguments
     value_type pair(std::forward<Args>(args)...);
     auto &container = data[pair.first];
 
     if constexpr (has_emplace_back<Container>()) {
       container.emplace_back(std::move(pair.second));
-      return iterator(data.find(pair.first), data.end(), --container.end());
+      return Iterator(data.find(pair.first), data.end(), --container.end());
     } else if constexpr (has_emplace_value<Container>()) {
       auto it = container.emplace(std::move(pair.second));
-      return iterator(data.find(pair.first), data.end(), it.first);
+      return Iterator(data.find(pair.first), data.end(), it.first);
     }
   }
 
@@ -390,7 +390,7 @@ public:
    * @param pos Iterator to the element to erase.
    * @return iterator Iterator following the erased element.
    */
-  iterator erase(iterator pos) {
+  Iterator erase(Iterator pos) {
     if (pos == end())
       return end();
 
@@ -405,9 +405,9 @@ public:
           outer_it = data.erase(outer_it);
           if (outer_it == data.end())
             return end();
-          return iterator(outer_it, data.end(), outer_it->second.begin());
+          return Iterator(outer_it, data.end(), outer_it->second.begin());
         }
-        return iterator(outer_it, data.end(), inner_it);
+        return Iterator(outer_it, data.end(), inner_it);
       }
     }
     return end();
@@ -420,8 +420,8 @@ public:
    * @param last End of the range to erase.
    * @return iterator Iterator following the last erased element.
    */
-  iterator erase(iterator first, iterator last) {
-    iterator result = end();
+  Iterator erase(Iterator first, Iterator last) {
+    Iterator result = end();
     while (first != last) {
       result = erase(first++);
     }
@@ -490,10 +490,10 @@ public:
    * @return iterator Iterator to the first element with the key, or end() if
    * not found.
    */
-  iterator find(const key_type &key) const {
+  Iterator find(const key_type &key) const {
     auto it = data.find(key);
     if (it != data.end() && !it->second.empty()) {
-      return iterator(it, data.end(), it->second.begin());
+      return Iterator(it, data.end(), it->second.begin());
     }
     return end();
   }
@@ -504,13 +504,13 @@ public:
    * @param key Key to find.
    * @return std::pair<iterator, iterator> Range of elements with the key.
    */
-  std::pair<iterator, iterator> equal_range(const key_type &key) const {
+  std::pair<Iterator, Iterator> equal_range(const key_type &key) const {
     auto it = data.find(key);
     if (it == data.end()) {
       return {end(), end()};
     }
-    return {iterator(it, data.end(), it->second.begin()),
-            iterator(it, data.end(), it->second.end())};
+    return {Iterator(it, data.end(), it->second.begin()),
+            Iterator(it, data.end(), it->second.end())};
   }
 
   // Iterator methods
@@ -520,10 +520,10 @@ public:
    *
    * @return iterator Iterator to the first element.
    */
-  iterator begin() const {
+  Iterator begin() const {
     if (data.empty())
       return end();
-    return iterator(data.begin(), data.end(), data.begin()->second.begin());
+    return Iterator(data.begin(), data.end(), data.begin()->second.begin());
   }
 
   /**
@@ -531,8 +531,8 @@ public:
    *
    * @return iterator Iterator to the end.
    */
-  iterator end() const {
-    return iterator(data.end(), data.end(),
+  Iterator end() const {
+    return Iterator(data.end(), data.end(),
                     typename Container::const_iterator());
   }
 
@@ -620,7 +620,7 @@ public:
    *
    * @return size_t Number of keys.
    */
-  size_t key_count() const { return data.size(); }
+  [[nodiscard]] size_t key_count() const { return data.size(); }
 
   /**
    * @brief Get the number of values for a specific key.
@@ -635,7 +635,7 @@ public:
    *
    * @return size_t Total number of values.
    */
-  size_t total_value_count() const {
+  [[nodiscard]] size_t total_value_count() const {
     size_t count = 0;
     for (const auto &pair : data) {
       count += pair.second.size();

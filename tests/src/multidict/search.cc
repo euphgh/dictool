@@ -35,7 +35,7 @@ TEST_F(MultiMapTest, OperatorBracket) {
 
 // Test at method
 TEST_F(MultiMapTest, At) {
-  auto &container = mm_int_int.at(1);
+  const auto &container = mm_int_int.at(1);
   EXPECT_EQ(container.size(), 2);
 
   EXPECT_THROW(auto foo = mm_int_int.at(999), std::out_of_range);
