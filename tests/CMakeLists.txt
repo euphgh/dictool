@@ -27,7 +27,18 @@ add_executable(multidict_test
   src/multidict/search.cc
 )
 
+add_executable(aglorithm_test
+  src/aglorithm/reverse.cc
+)
+
 target_link_libraries(multidict_test
+    PRIVATE
+        dictool
+        GTest::gtest_main
+        GTest::gmock
+)
+
+target_link_libraries(aglorithm_test
     PRIVATE
         dictool
         GTest::gtest_main
@@ -36,4 +47,5 @@ target_link_libraries(multidict_test
 
 include(GoogleTest)
 gtest_discover_tests(multidict_test)
+gtest_discover_tests(aglorithm_test)
 

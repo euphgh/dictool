@@ -582,6 +582,12 @@ public:
   }
 
   /**
+   * get the internal data struct
+   * @return const reference of internal Dict Container
+   */
+  const Dict &cdata() const { return data; }
+
+  /**
    * @brief Access container for a key (creates if not exists).
    *
    * @param key Key to access.
