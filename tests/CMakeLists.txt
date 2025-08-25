@@ -29,6 +29,7 @@ add_executable(multidict_test
 
 add_executable(aglorithm_test
   src/aglorithm/reverse.cc
+  src/aglorithm/other.cc
 )
 
 target_link_libraries(multidict_test

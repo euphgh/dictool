@@ -66,6 +66,19 @@ template <typename T> constexpr bool has_emplace_value() {
   return HasEmplaceValue<T>::value;
 }
 
+template <typename T, template <typename...> class CTemplate = std::vector>
+static void container_emplace(CTemplate<T> &c, const T &elem) {
+  using Container = CTemplate<T>;
+  // Static assertion to ensure container has required methods
+  static_assert(has_emplace_back<Container>() || has_emplace_value<Container>(),
+                "Container must have either emplace_back or emplace method");
+  if constexpr (has_emplace_back<Container>()) {
+    c.emplace_back(elem);
+  } else {
+    c.emplace(elem);
+  }
+}
+
 /**
  * @brief A multi-map implementation that stores multiple values per key using
  * customizable containers.
@@ -102,15 +115,6 @@ public:
   using const_reference = const value_type &; /**< Const reference type */
   using pointer = value_type *;               /**< Pointer type */
   using const_pointer = const value_type *;   /**< Const pointer type */
-
-  static typename Container::iterator container_emplace(Container c,
-                                                        const V &value) {
-    if constexpr (has_emplace_back<Container>()) {
-      return c.emplace_back(value);
-    } else {
-      return c.emplace(value);
-    }
-  }
 
   /**
    * @brief Const iterator for MultiMap.
