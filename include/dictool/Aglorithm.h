@@ -48,7 +48,6 @@ template <typename K, typename IV, typename OV,
           template <typename...> class DictLike = std::map>
 DictLike<K, OV> transform(const DictLike<K, IV> &inputs,
                           std::function<OV(K, IV)> func) {
-  using InDict = DictLike<K, IV>;
   using OutDict = DictLike<K, OV>;
   OutDict res;
   for (const auto &[key, value] : inputs) {
